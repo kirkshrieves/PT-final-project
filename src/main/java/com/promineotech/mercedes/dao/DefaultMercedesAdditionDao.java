@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 import com.promineotech.mercedes.controller.Mercedes;
 import com.promineotech.mercedes.entity.Addition;
 import com.promineotech.mercedes.entity.Chassis;
+import com.promineotech.mercedes.entity.Engine;
 import com.promineotech.mercedes.entity.MercedesName;
 import com.promineotech.mercedes.entity.Vin;
 
@@ -30,18 +31,19 @@ public class DefaultMercedesAdditionDao {
 	private NamedParameterJdbcTemplate jdbcTemplate;
 	
 	//@Override
-		public Addition saveAddition(Vin vin, Chassis chassis, Mercedes mercedes) {
-			SqlParams params = generateInsertSql(vin, chassis, mercedes);
-			KeyHolder keyHolder = new GeneratedKeyHolder();
-			jdbcTemplate.update(params.sql, params.source, keyHolder);
-			
-			Long chassisPK = keyHolder.getKey().longValue();
+	public Addition saveAddition(Vin vin, Chassis chassis, Mercedes mercedes) {
+		SqlParams params = generateInsertSql(vin, chassis, mercedes);
+		KeyHolder keyHolder = new GeneratedKeyHolder();
+		jdbcTemplate.update(params.sql, params.source, keyHolder);
 		
-		// @formatter:off	
-		return Addition.builder();
+		Long chassisPK = keyHolder.getKey().longValue();
+		
+		// @formatter:off
+		return Addition.builder()
 				.chassisPK(chassisPK)
-				.vindId(vin)
-				.chassis(mercedes)
+				.vinId(vin)
+				.chassisId(chassis)
+				.vehicleName(chassis)
 				.build();
 		// @formatter:on
 	}
@@ -93,6 +95,20 @@ public class DefaultMercedesAdditionDao {
 				jdbcTemplate.query(sql,  params, new ChassisResultSetExtractor()));
 	}
 	
+	public Optional<Engine> fetchEngine(String engineId){
+		// @formatter:off
+		String sql = ""
+				+ "SELECT * "
+				+ "FROM engine "
+				+ "WHERE engine_id = :engine_id";
+		// @formatter:on
+		
+		Map<String, Object> params = new HashMap<>();
+		params.put("engine_id", engineId);
+		return Optional.ofNullable(
+				jdbcTemplate.query(sql, params, new EngineResultSetExtractor()));
+	}
+	
 	class VinResultSetExtractor implements ResultSetExtractor<Vin>{
 		@Override
 		public Vin extractData(ResultSet rs) throws SQLException {
@@ -105,7 +121,7 @@ public class DefaultMercedesAdditionDao {
 				.vinPK(rs.getLong("vin_pk"))
 				.vinOneThree(rs.getString("vin_one_three"))
 				.wheelTorque(rs.getInt("wheel_torque"))
-				build();
+				.build();
 
 				
 		// @formatter:on
@@ -123,7 +139,23 @@ public class DefaultMercedesAdditionDao {
 				.chassisPK(rs.getLong("chassis_pk"))
 				.vinId(rs.getString("vin_id"))
 				.vehicleName(rs.getString("vehicle_name"))
-				build();
+				.build();
+		// @formatter:on
+		}
+	}
+	
+	class EngineResultSetExtractor implements ResultSetExtractor<Engine>{
+		@Override
+		public Engine extractData(ResultSet rs) throws SQLException {
+			rs.next();
+		
+		// @formatter:off
+			return Engine.builder()
+					.engineId(rs.getFloat("engine_id"))
+					.enginePK(rs.getLong("engine_pk"))
+					.oilCapacity(rs.getFloat("oil_capacity"))
+					.engineSize(rs.getFloat("engine_size"))
+					.build();
 		// @formatter:on
 		}
 	}
