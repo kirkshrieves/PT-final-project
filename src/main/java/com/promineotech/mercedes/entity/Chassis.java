@@ -10,4 +10,12 @@ public class Chassis {
 	private String vinId;
 	private String chassisId;
 	private String vehicleName;
+	public void update(Chassis chassis, String id) {
+		// TODO Auto-generated method stub
+		
+	}
+	public static void delete(String id) {
+		// TODO Auto-generated method stub
+		
+	}
 }
